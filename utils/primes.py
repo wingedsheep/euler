@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 def __isPrime(number, prevPrimes, currentIndex):
 	for prime in prevPrimes[1:currentIndex - 1]:
@@ -15,22 +16,43 @@ def __filterMultiples(primes, startingIndex, currentNr):
 		currentIndex += 1
 	return np.delete(primes, indicesToRemove)
 
-def calculatePrimes(max):
-	primes = np.arange(1, max + 1)
+def calculatePrimesForRange(alreadyFoundPrimes, uncheckedMin, uncheckedMax):
+	primes = alreadyFoundPrimes
 
-	currentIndex = 1
-	prevLenPrimes = len(primes)
-	while currentIndex < len(primes):
+	if uncheckedMin % 2 == 0:
+		if uncheckedMin == 2:
+			primes = np.concatenate((np.array([2], dtype = 'int'), np.arange(uncheckedMin + 1, uncheckedMax + 1, 2, dtype = 'int')))
+		else:
+			primes = np.concatenate((np.array(primes, dtype = 'int'), np.arange(uncheckedMin + 1, uncheckedMax + 1, 2, dtype = 'int')))
+	else:
+		primes = np.concatenate((np.array(primes, dtype = 'int'), np.arange(uncheckedMin, uncheckedMax + 1, 2, dtype = 'int')))
+
+	currentIndex = len(alreadyFoundPrimes)
+
+	if len(alreadyFoundPrimes) > 1:
+		for i, p in enumerate(alreadyFoundPrimes[1:]):
+			if p >= math.sqrt(uncheckedMax):
+				break
+			primes = __filterMultiples(primes, currentIndex, p)
+
+	while currentIndex < len(primes) and primes[currentIndex] < math.sqrt(uncheckedMax):
 		current = primes[currentIndex]
-		primes = filterMultiples(primes, currentIndex + 1, current)
-
-		if (prevLenPrimes == len(primes)):
-			break
-
-		prevLenPrimes = len(primes)
-
+		primes = __filterMultiples(primes, currentIndex + 1, current)
 		currentIndex += 1
+
 	return primes
+
+def calculatePrimes(max):
+	return calculatePrimesForRange([], 2, max)
+
+def calculateFirstXPrimes(x, stepSize = 1000):
+	foundPrimes = []
+	currentNumber = 2
+	while len(foundPrimes) < x:
+		foundPrimes = calculatePrimesForRange(foundPrimes, currentNumber, currentNumber + stepSize)
+		currentNumber += (stepSize + 1)
+
+	return foundPrimes[0:x]
 
 def isPrime(number):
 	i = 2
